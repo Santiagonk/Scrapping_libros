@@ -8,6 +8,8 @@ import requests
 from urllib.parse import urlparse
 import requests
 import lxml.html as html
+import os
+import datetime
 
 #Constants 
 HOME_URL = 'https://www.buscalibre.com.co/'
@@ -41,15 +43,15 @@ def parse_home():
             print("Se inicia parseo de las noticias")
             for link in links_to_books:
                 if link[:5] == 'https':
-                    parsed_notice(link, today)
-            print(f'finalizado el parseo de las noticias, se realizo sobre {len(links_to_notice)} noticias')
+                    parsed_book(link, today)
+            print(f'finalizado el parseo de las noticias, se realizo sobre {len(links_to_books)} noticias')
         else:
             raise ValueError(f'Error: {response.status_code}')
     except ValueError as ve:
         print(ve)
 
 
-def parsed_notice(link, date):
+def parsed_book(link, date):
     try:
         #print(f'Se inicia parseo del link {link}')
         response = requests.get(link)
@@ -64,32 +66,32 @@ def parsed_notice(link, date):
                 print(f'{link} el titulo es {libro}')
                 autor = parsed.xpath(XPATH_AUTHOR)[0]
                 print('autor correcto')
-                precio = parsed.xpath(XPATH_PRICE)
+                precio = parsed.xpath(XPATH_PRICE)[0]
                 print('Precio correcto')
-                editorial = parsed.xpath(XPATH_EDITORIAL)
+                editorial = parsed.xpath(XPATH_EDITORIAL)[0]
                 print('Editorial correcto')
-                category = parsed.xpath(XPATH_CATEGORY)
+                category = parsed.xpath(XPATH_CATEGORY)[0]
                 print('Categoria correcto')
-                opinions = parsed.xpath(XPATH_OPINIONS)
-                print(title," parseado correctamente")
+                opinions = parsed.xpath(XPATH_OPINIONS)[0]
+                print(libro," parseado correctamente")
             except IndexError:
                 return
 
-            with open(f'{date}/{title}.txt','w',encoding='utf-8') as f:
+            f = open(f'{date}.csv','a',encoding='utf-8')
                 
-                f.write(libro)
-                f.write('\n\n')
-                f.write(autor)
-                f.write('\n\n')
-                f.write(precio)
-                f.write('\n\n')
-                f.write(editorial)
-                f.write('\n\n')
-                f.write(category)
-                f.write('\n\n')
-                f.write(opinions)
-                f.write('\n\n')              
-                
+            f.write(libro)
+            f.write(',')
+            f.write(autor)
+            f.write(',')
+            f.write(precio)
+            f.write(',')
+            f.write(editorial)
+            f.write(',')
+            f.write(category)
+            f.write(',')
+            f.write(opinions)
+            f.write('\n')              
+            f.close()  
 
         else:
             raise ValueError(f'Error: {response.status_code}')
@@ -98,7 +100,7 @@ def parsed_notice(link, date):
 
 
 def main():
-    pass
+    parse_home()
 
 if __name__ == "__main__":
-    pass
+    main()
