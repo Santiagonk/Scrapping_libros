@@ -35,11 +35,15 @@ def parse_home():
 
             today = datetime.date.today().strftime('%d-%m-%Y') #guardar en texto la fecha de hoy
             print("Se obtienen los links de: ",today)
-            if not os.path.isdir(today):
-                os.mkdir(today)
-                print("Se crea carpeta: ",today)
-            else:
-                print("Carpeta ya esta creada")
+            f = open(f'{today}.csv','w',encoding='utf-8')
+            f.close()
+            # if not os.path.isdir(today):
+            #     os.mkdir(today)
+                
+            #     f.close()
+            #     print("Se crea carpeta: ",today)
+            # else:
+            #     print("Carpeta ya esta creada")
             print("Se inicia parseo de las noticias")
             for link in links_to_books:
                 if link[:5] == 'https':
@@ -71,26 +75,21 @@ def parsed_book(link, date):
                 editorial = parsed.xpath(XPATH_EDITORIAL)[0]
                 print('Editorial correcto')
                 category = parsed.xpath(XPATH_CATEGORY)[0]
-                print('Categoria correcto')
-                opinions = parsed.xpath(XPATH_OPINIONS)[0]
+                category = category.strip()
+                print('Categoria correcto')                
+                if parsed.xpath(XPATH_OPINIONS)[0] != []:
+                    opinions = parsed.xpath(XPATH_OPINIONS)[0]                    
+                    opinions = opinions.strip()
+                else:
+                    opinions = '-1'
                 print(libro," parseado correctamente")
             except IndexError:
                 return
-
+            dato = '\n'+ libro + ',' + autor + ','  + precio  + ','  + editorial  + ','  + category #+ ','   + opinions
+            print(dato)
             f = open(f'{date}.csv','a',encoding='utf-8')
                 
-            f.write(libro)
-            f.write(',')
-            f.write(autor)
-            f.write(',')
-            f.write(precio)
-            f.write(',')
-            f.write(editorial)
-            f.write(',')
-            f.write(category)
-            f.write(',')
-            f.write(opinions)
-            f.write('\n')              
+            f.write(dato)                     
             f.close()  
 
         else:
