@@ -10,6 +10,7 @@ import requests
 import lxml.html as html
 import os
 import datetime
+import csv
 
 #Constants 
 HOME_URL = 'https://www.buscalibre.com.co/'
@@ -35,8 +36,11 @@ def parse_home():
 
             today = datetime.date.today().strftime('%d-%m-%Y') #guardar en texto la fecha de hoy
             print("Se obtienen los links de: ",today)
-            f = open(f'{today}.csv','w',encoding='utf-8')
-            f.close()
+            dato = ['libro', 'autor', 'precio', 'editorial', 'category', 'opinions']
+            # with open(f'{today}.csv','w') as csv_file:
+            #     writer = csv.writer(csv_file, delimiter = ',') 
+            #     writer.writerow(dato) 
+
             # if not os.path.isdir(today):
             #     os.mkdir(today)
                 
@@ -45,10 +49,16 @@ def parse_home():
             # else:
             #     print("Carpeta ya esta creada")
             print("Se inicia parseo de las noticias")
+            books = []
             for link in links_to_books:
                 if link[:5] == 'https':
-                    parsed_book(link, today)
+                    books.append(parsed_book(link, today))
             print(f'finalizado el parseo de las noticias, se realizo sobre {len(links_to_books)} noticias')
+            with open(f'{today}.csv','w') as csv_file:
+                writer = csv.writer(csv_file, delimiter = ',')
+                writer.writerow(dato)  
+                for book in books:
+                    writer.writerow(book) 
         else:
             raise ValueError(f'Error: {response.status_code}')
     except ValueError as ve:
@@ -65,19 +75,34 @@ def parsed_book(link, date):
             parsed = html.fromstring(notice)
             
             try:
-                libro = ''
-                libro = parsed.xpath(XPATH_NAME)[0]                
-                print(f'{link} el titulo es {libro}')
-                autor = parsed.xpath(XPATH_AUTHOR)[0]
-                print('autor correcto')
-                precio = parsed.xpath(XPATH_PRICE)[0]
-                print('Precio correcto')
-                editorial = parsed.xpath(XPATH_EDITORIAL)[0]
-                print('Editorial correcto')
-                category = parsed.xpath(XPATH_CATEGORY)[0]
-                category = category.strip()
-                print('Categoria correcto')                
-                if parsed.xpath(XPATH_OPINIONS)[0] != []:
+                
+                if parsed.xpath(XPATH_NAME) != []:
+                    libro = parsed.xpath(XPATH_NAME)[0]                
+                    print(f'{link} el titulo es {libro}')
+                else:
+                    libro = '-1'
+                if parsed.xpath(XPATH_AUTHOR) != []:
+                    autor = parsed.xpath(XPATH_AUTHOR)[0]
+                    print('autor correcto')
+                else:
+                    autor = '-1'
+                if parsed.xpath(XPATH_PRICE) != []:
+                    precio = parsed.xpath(XPATH_PRICE)[0]
+                    print('Precio correcto')
+                else:
+                    precio = '-1'
+                if parsed.xpath(XPATH_EDITORIAL) != []:
+                    editorial = parsed.xpath(XPATH_EDITORIAL)[0]
+                    print('Editorial correcto')
+                else:
+                    editorial = '-1' 
+                if parsed.xpath(XPATH_CATEGORY) !=[]:
+                    category = parsed.xpath(XPATH_CATEGORY)[0]
+                    category = category.strip()
+                    print('Categoria correcto')
+                else:
+                    category = '-1'                
+                if parsed.xpath(XPATH_OPINIONS) != []:
                     opinions = parsed.xpath(XPATH_OPINIONS)[0]                    
                     opinions = opinions.strip()
                 else:
@@ -85,12 +110,13 @@ def parsed_book(link, date):
                 print(libro," parseado correctamente")
             except IndexError:
                 return
-            dato = '\n'+ libro + ',' + autor + ','  + precio  + ','  + editorial  + ','  + category #+ ','   + opinions
-            print(dato)
-            f = open(f'{date}.csv','a',encoding='utf-8')
-                
-            f.write(dato)                     
-            f.close()  
+
+            return [libro, autor, precio, editorial, category, opinions]
+            # print(dato)
+            # with open(f'{date}.csv','a') as csv_file:    
+            #     writer = csv.writer(csv_file, delimiter = ',') 
+            #     writer.writerow(dato)                     
+            
 
         else:
             raise ValueError(f'Error: {response.status_code}')
