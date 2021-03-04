@@ -16,12 +16,12 @@ import csv
 HOME_URL = 'https://www.buscalibre.com.co/'
 
 XPATH_LINK_TO_ARTICLE = '//div[@class="productos pais46"]//a/@href' #constant links
-XPATH_AUTHOR = '//p[@class = "precioAhora margin-0 font-weight-strong"]/span/text()' # constant de autor
+XPATH_AUTHOR = '//div[@id = "metadata-autor"]/a/text()' # constant de autor
 XPATH_EDITORIAL = '//div[@id = "metadata-editorial"]/a/text()' #constant editorial
 XPATH_CATEGORY = '//div[@id = "metadata-categoría"]/text()' # constant category
 XPATH_NAME = '//div[@class = "info-libro"]//h1/text()' # constant name
 XPATH_OPINIONS = '//div[@class = "info-libro"]//a[@id ="valoracion"]/text()' # constant opinions
-XPATH_PRICE = '//div[@id = "metadata-editorial"]/a/text()'
+XPATH_PRICE = '//p[@class = "precioAhora margin-0 font-weight-strong"]/span/text()'
 
 def parse_home():
     try:
@@ -36,10 +36,9 @@ def parse_home():
 
             today = datetime.date.today().strftime('%d-%m-%Y') #guardar en texto la fecha de hoy
             print("Se obtienen los links de: ",today)
-            dato = ['libro', 'autor', 'precio', 'editorial', 'category', 'opinions']
-            # with open(f'{today}.csv','w') as csv_file:
-            #     writer = csv.writer(csv_file, delimiter = ',') 
-            #     writer.writerow(dato) 
+            dato = 'libro, autor, precio, editorial, category, opinions'
+            with open(f'{today}.csv','w') as csv_file:
+                csv_file.write(dato) 
 
             # if not os.path.isdir(today):
             #     os.mkdir(today)
@@ -54,11 +53,11 @@ def parse_home():
                 if link[:5] == 'https':
                     books.append(parsed_book(link, today))
             print(f'finalizado el parseo de las noticias, se realizo sobre {len(links_to_books)} noticias')
-            with open(f'{today}.csv','w') as csv_file:
-                writer = csv.writer(csv_file, delimiter = ',')
-                writer.writerow(dato)  
-                for book in books:
-                    writer.writerow(book) 
+            # with open(f'{today}.csv','w') as csv_file:
+            #     writer = csv.writer(csv_file, delimiter = ',')
+            #     writer.writerow(dato)  
+            #     for book in books:
+            #         writer.writerow(book) 
         else:
             raise ValueError(f'Error: {response.status_code}')
     except ValueError as ve:
@@ -77,22 +76,26 @@ def parsed_book(link, date):
             try:
                 
                 if parsed.xpath(XPATH_NAME) != []:
-                    libro = parsed.xpath(XPATH_NAME)[0]                
+                    libro = parsed.xpath(XPATH_NAME)[0]
+                    libro = libro.replace(',',' ')                
                     print(f'{link} el titulo es {libro}')
                 else:
                     libro = '-1'
                 if parsed.xpath(XPATH_AUTHOR) != []:
                     autor = parsed.xpath(XPATH_AUTHOR)[0]
+                    autor = autor.replace(',',' ')
                     print('autor correcto')
                 else:
                     autor = '-1'
                 if parsed.xpath(XPATH_PRICE) != []:
                     precio = parsed.xpath(XPATH_PRICE)[0]
+                    precio = str(precio)
                     print('Precio correcto')
                 else:
                     precio = '-1'
                 if parsed.xpath(XPATH_EDITORIAL) != []:
                     editorial = parsed.xpath(XPATH_EDITORIAL)[0]
+                    editorial = editorial.replace(',',' ')
                     print('Editorial correcto')
                 else:
                     editorial = '-1' 
@@ -111,11 +114,11 @@ def parsed_book(link, date):
             except IndexError:
                 return
 
-            return [libro, autor, precio, editorial, category, opinions]
-            # print(dato)
-            # with open(f'{date}.csv','a') as csv_file:    
-            #     writer = csv.writer(csv_file, delimiter = ',') 
-            #     writer.writerow(dato)                     
+            dato = "\n" + libro + ',' + autor + ',' + precio + ',' + editorial + ',' + category + ',' + opinions
+            print(dato)
+            with open(f'{date}.csv','a') as csv_file:    
+                
+                csv_file.write(dato)                     
             
 
         else:
